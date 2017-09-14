@@ -3,11 +3,12 @@
 
 #include "Arduino.h"
 
-class Valve{
+class Valve {
 private:
-  static const uint8_t valve = 12;
-  static const uint8_t valveRead = 11;
+  static const uint8_t valve = 2;
+  static const uint8_t valveRead = 3;
   bool valveOpen;
+
 public:
   void initValve();
   void openValve();

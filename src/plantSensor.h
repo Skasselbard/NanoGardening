@@ -1,15 +1,15 @@
 #ifndef PLANTSENSOR
 #define PLANTSENSOR
 
-#include "Arduino.h"
+#include "pin.h"
 
-class PlantSensor{
-private:
-  static const uint8_t humidity = A0;
+class PlantSensor : public AnalogPin {
 public:
-  void initPlantSensor();
-  int readHumidity();
-  int readPlantSensor();
+  PlantSensor(uint8_t);
+  int readHumidity() { return readValue(); }
+  int readPlantSensor() { return readValue(); }
+  int readValue();
+  void writeValue(int);
 };
 
 #endif

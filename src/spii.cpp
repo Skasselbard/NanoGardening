@@ -1,11 +1,13 @@
-#include "spii.h"
 #include <SPI.h>
+
+#include "manager.h"
+#include "spii.h"
 
 #define BUFFER_SIZE 100
 
 char inputBuffer[BUFFER_SIZE];
 char outputBuffer[BUFFER_SIZE];
-volatile byte bufferPosition;
+byte bufferPosition;
 String readData = "";
 String writeData = "";
 
@@ -28,14 +30,32 @@ void addWriteData(int bufferStart) {
 
 // SPI interrupt routine
 ISR(SPI_STC_vect) {
-  if (bufferPosition == BUFFER_SIZE) {
-    bufferPosition = 0;      // reset buffer
-    readData += inputBuffer; // save read data
-    addWriteData(0);
+  // Serial.println();
+  // Serial.println("BufferPosition: " + String(bufferPosition, DEC));
+  byte received = SPDR;
+  // if (bufferPosition == BUFFER_SIZE - 1) {
+  //   bufferPosition = 0;                     // reset buffer
+  //   readData += inputBuffer;                // save read data
+  //   for (int i = 0; i < BUFFER_SIZE; i++) { // delete input buffer
+  //     inputBuffer[i] = 0;
+  //   }
+  //   addWriteData(0);
+  //   Serial.print("in: ");
+  //   Serial.println(inputBuffer);
+  //   Serial.print("out: ");
+  //   Serial.println(outputBuffer);
+  //   Serial.println("read: " + readData);
+  //   Serial.println("write: " + writeData);
+  // }
+  // Serial.println("tx: " + String(received, HEX));
+  // Serial.print("buffer: ");
+  for (int i = 0; i < BUFFER_SIZE; i++) {
+    Serial.print(String(inputBuffer[i], HEX) + ".");
   }
-  inputBuffer[bufferPosition] = SPDR;
-  SPDR = outputBuffer[bufferPosition];
-  outputBuffer[bufferPosition] = 0;
+  Serial.println();
+  inputBuffer[bufferPosition] = received; // SPDR;
+  // SPDR = outputBuffer[bufferPosition];
+  // outputBuffer[bufferPosition] = 0;
   bufferPosition++;
 } // end of interrupt routine SPI_STC_vect
 
@@ -60,4 +80,13 @@ void Spii::write(String message) {
   addWriteData(bufferPosition);
 }
 
-String Spii::read() { return ""; }
+String Spii::read() {
+  int messageEnd = readData.indexOf(0x04); // End Of Transmission
+  if (messageEnd == -1) {
+    return "";
+  } else {
+    String message = readData.substring(0, messageEnd + 1);
+    readData = readData.substring(messageEnd + 1);
+    return message;
+  }
+}
