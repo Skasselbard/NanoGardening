@@ -10,6 +10,9 @@ public:
   static String read();
   static void initAsSlave();
   // void initAsMaster();
+
+  static void printBuffer();
+  static void printReadData();
 };
 
 #endif

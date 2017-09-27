@@ -3,13 +3,38 @@
 #include "manager.h"
 #include "spii.h"
 
-#define BUFFER_SIZE 100
+#define BUFFER_SIZE 20
 
 char inputBuffer[BUFFER_SIZE];
 char outputBuffer[BUFFER_SIZE];
-byte bufferPosition;
+byte inputBufferPosition;
+byte outputBufferPosition;
 String readData = "";
 String writeData = "";
+bool messageComplete = false;
+
+void Spii::printBuffer() {
+  Serial.print("inputbuffer: ");
+  for (int i = 0; i < BUFFER_SIZE; i++) {
+    Serial.print(String(inputBuffer[i], HEX) + ".");
+  }
+  Serial.println();
+  Serial.print("outputbuffer: ");
+  for (int i = 0; i < BUFFER_SIZE; i++) {
+    Serial.print(String(outputBuffer[i], HEX) + ".");
+  }
+  Serial.println();
+}
+
+void Spii::printReadData() {
+  Serial.println("ReadData: ");
+  // Serial.print("length: ");
+  // Serial.println(String(readData.length(), DEC));
+  for (int i = 0; i < readData.length(); i++) {
+    Serial.print(String(readData[i], HEX) + ".");
+  }
+  Serial.println();
+}
 
 void addWriteData(int bufferStart) {
   for (int i = 0; i < BUFFER_SIZE;
@@ -28,60 +53,54 @@ void addWriteData(int bufferStart) {
   }
 }
 
+void processMessage() {
+  for (int i = 0; i < inputBufferPosition; i++) {
+    readData += inputBuffer[i];
+    inputBuffer[i] = 0;
+  }
+  inputBufferPosition = 0;
+}
+
 // SPI interrupt routine
 ISR(SPI_STC_vect) {
-  // Serial.println();
-  // Serial.println("BufferPosition: " + String(bufferPosition, DEC));
   byte received = SPDR;
-  // if (bufferPosition == BUFFER_SIZE - 1) {
-  //   bufferPosition = 0;                     // reset buffer
-  //   readData += inputBuffer;                // save read data
-  //   for (int i = 0; i < BUFFER_SIZE; i++) { // delete input buffer
-  //     inputBuffer[i] = 0;
-  //   }
-  //   addWriteData(0);
-  //   Serial.print("in: ");
-  //   Serial.println(inputBuffer);
-  //   Serial.print("out: ");
-  //   Serial.println(outputBuffer);
-  //   Serial.println("read: " + readData);
-  //   Serial.println("write: " + writeData);
-  // }
-  // Serial.println("tx: " + String(received, HEX));
-  // Serial.print("buffer: ");
-  for (int i = 0; i < BUFFER_SIZE; i++) {
-    Serial.print(String(inputBuffer[i], HEX) + ".");
+  inputBuffer[inputBufferPosition] = received; // SPDR;
+  SPDR = outputBuffer[outputBufferPosition];
+  outputBuffer[outputBufferPosition] = 0;
+  inputBufferPosition++;
+  outputBufferPosition++;
+  if (received == 0x04) {
+    processMessage();
   }
-  Serial.println();
-  inputBuffer[bufferPosition] = received; // SPDR;
-  // SPDR = outputBuffer[bufferPosition];
-  // outputBuffer[bufferPosition] = 0;
-  bufferPosition++;
+  if (outputBufferPosition == BUFFER_SIZE - 1) {
+    outputBufferPosition = 0; // reset buffer
+    addWriteData(0);
+  }
 } // end of interrupt routine SPI_STC_vect
 
 void Spii::initAsSlave() {
   Serial.begin(9600);
   // turn on SPI in slave mode
-  SPCR |= bit(SPE); // set slave mode
-  // SPCR &= ~bit(CPOL); //clock polarity
-  // SPCR &= ~bit(CPHA); //clock phase
-  // SPCR &= ~bit(MSTR); //most significant byte first
-  // SPCR &= ~bit(DORD);
-  // have to send on master in, *slave out*
   pinMode(MISO, OUTPUT);
-  // get ready for an interrupt
-  bufferPosition = 0;
+  SPCR |= bit(SPE); // set slave mode
+  // SPCR &= ~bit(CPOL); // clock polarity
+  // SPCR &= ~bit(CPHA); // clock phase
+  // SPCR &= ~bit(MSTR);
+  // SPCR |= bit(DORD); // most significant byte first
+  inputBufferPosition = 0;
+  outputBufferPosition = 0;
   // now turn on interrupts
   SPI.attachInterrupt();
 }
 
 void Spii::write(String message) {
   writeData += message;
-  addWriteData(bufferPosition);
+  addWriteData(outputBufferPosition);
 }
 
 String Spii::read() {
-  int messageEnd = readData.indexOf(0x04); // End Of Transmission
+  int messageEnd = readData.indexOf((byte)0x04); // End Of Transmission
+  Serial.println(messageEnd, DEC);
   if (messageEnd == -1) {
     return "";
   } else {

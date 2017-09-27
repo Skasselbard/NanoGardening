@@ -13,7 +13,7 @@ Manager::Manager() {
   }
   initializeComponents();
   while (true) {
-    //   eventLoop();
+    eventLoop();
   }
 }
 
@@ -52,6 +52,8 @@ void Manager::eventLoop() {
     const char *message = rx.c_str();
     processControl((Control *)message);
   }
+  Spii::printBuffer();
+  Spii::printReadData();
   Serial.flush();
   delay(2000);
 }
