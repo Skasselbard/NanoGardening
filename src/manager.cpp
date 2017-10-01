@@ -45,15 +45,17 @@ bool Manager::writePin(byte pin, byte writeValue) {
 }
 
 void Manager::eventLoop() {
-  String rx = Spii::read();
-  if (rx != "") {
+  byte *rx = Spii::read();
+  if (rx) {
     Serial.print("Manager got Message: ");
-    Serial.println(rx);
-    const char *message = rx.c_str();
-    processControl((Control *)message);
+    for (int i = 0; rx[i] != 0x04; i++) {
+      Serial.print(String(rx[i], DEC) + ".");
+    }
+    Serial.println();
+    processControl((Control *)rx);
+    free(rx);
   }
-  Spii::printBuffer();
-  Spii::printReadData();
+  // Spii::printReadData();
   Serial.flush();
-  delay(2000);
+  delay(1000);
 }

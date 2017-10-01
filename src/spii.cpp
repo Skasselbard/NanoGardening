@@ -2,84 +2,78 @@
 
 #include "manager.h"
 #include "spii.h"
+#include <QueueList.h>
 
 #define BUFFER_SIZE 20
 
 char inputBuffer[BUFFER_SIZE];
-char outputBuffer[BUFFER_SIZE];
 byte inputBufferPosition;
-byte outputBufferPosition;
-String readData = "";
-String writeData = "";
+String currentWriteMessage = "";
+byte writeMessagePosition = 0;
+QueueList<byte *> readData = QueueList<byte *>();
+QueueList<String> writeData = QueueList<String>();
 bool messageComplete = false;
 
 void Spii::printBuffer() {
   Serial.print("inputbuffer: ");
   for (int i = 0; i < BUFFER_SIZE; i++) {
-    Serial.print(String(inputBuffer[i], HEX) + ".");
-  }
-  Serial.println();
-  Serial.print("outputbuffer: ");
-  for (int i = 0; i < BUFFER_SIZE; i++) {
-    Serial.print(String(outputBuffer[i], HEX) + ".");
+    Serial.print(String(inputBuffer[i], DEC) + ".");
   }
   Serial.println();
 }
 
+// prints only the next element
 void Spii::printReadData() {
   Serial.println("ReadData: ");
-  // Serial.print("length: ");
-  // Serial.println(String(readData.length(), DEC));
-  for (int i = 0; i < readData.length(); i++) {
-    Serial.print(String(readData[i], HEX) + ".");
+  if (!readData.isEmpty()) {
+    for (int i = 0; readData.peek()[i] != 0x04; i++) {
+      Serial.print(String(readData.peek()[i], DEC) + ".");
+    }
   }
   Serial.println();
-}
-
-void addWriteData(int bufferStart) {
-  for (int i = 0; i < BUFFER_SIZE;
-       i++) { // copy write data to buffer and remove the part from the write
-              // data
-    if (outputBuffer[(i + bufferStart) % bufferStart] != 0 ||
-        writeData.length() == i) {
-      if (writeData.length() == i) { // nothing left to send
-        writeData = "";
-      } else {
-        writeData = writeData.substring(i);
-      }
-      break;
-    }
-    outputBuffer[(i + bufferStart) % bufferStart] = writeData[i];
-  }
 }
 
 void processMessage() {
+  byte *message = (byte *)malloc(sizeof(byte) * inputBufferPosition);
   for (int i = 0; i < inputBufferPosition; i++) {
-    readData += inputBuffer[i];
+    message[i] = inputBuffer[i];
     inputBuffer[i] = 0;
   }
+  readData.push(message);
   inputBufferPosition = 0;
+}
+
+byte getNextSendCharacter() {
+  if (currentWriteMessage == "") {
+    if (writeData.isEmpty()) { // nothing to write
+      return 0x00;
+    }
+    currentWriteMessage = writeData.pop();
+    writeMessagePosition = 0;
+  }
+  if (writeMessagePosition + 1 ==
+      currentWriteMessage.length()) { // end of message
+    currentWriteMessage = "";
+    return 0x00;
+  }
+  writeMessagePosition++;
+  return (currentWriteMessage)[writeMessagePosition - 1];
 }
 
 // SPI interrupt routine
 ISR(SPI_STC_vect) {
   byte received = SPDR;
   inputBuffer[inputBufferPosition] = received; // SPDR;
-  SPDR = outputBuffer[outputBufferPosition];
-  outputBuffer[outputBufferPosition] = 0;
-  inputBufferPosition++;
-  outputBufferPosition++;
+  SPDR = getNextSendCharacter();
+  if (inputBufferPosition < BUFFER_SIZE - 1) {
+    inputBufferPosition++;
+  }
   if (received == 0x04) {
     processMessage();
-  }
-  if (outputBufferPosition == BUFFER_SIZE - 1) {
-    outputBufferPosition = 0; // reset buffer
-    addWriteData(0);
   }
 } // end of interrupt routine SPI_STC_vect
 
 void Spii::initAsSlave() {
-  Serial.begin(9600);
   // turn on SPI in slave mode
   pinMode(MISO, OUTPUT);
   SPCR |= bit(SPE); // set slave mode
@@ -88,24 +82,16 @@ void Spii::initAsSlave() {
   // SPCR &= ~bit(MSTR);
   // SPCR |= bit(DORD); // most significant byte first
   inputBufferPosition = 0;
-  outputBufferPosition = 0;
   // now turn on interrupts
   SPI.attachInterrupt();
 }
 
-void Spii::write(String message) {
-  writeData += message;
-  addWriteData(outputBufferPosition);
-}
+void Spii::write(String message) { writeData.push(String(message)); }
 
-String Spii::read() {
-  int messageEnd = readData.indexOf((byte)0x04); // End Of Transmission
-  Serial.println(messageEnd, DEC);
-  if (messageEnd == -1) {
-    return "";
+byte *Spii::read() {
+  if (readData.isEmpty()) {
+    return nullptr;
   } else {
-    String message = readData.substring(0, messageEnd + 1);
-    readData = readData.substring(messageEnd + 1);
-    return message;
+    return readData.pop();
   }
 }

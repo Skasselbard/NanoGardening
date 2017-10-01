@@ -3,17 +3,17 @@
 
 #include "manager.h"
 
-Header *lastHeader = nullptr;
+Header *lastHeader = (Header *)calloc(1, sizeof(Header));
 Header *receivedHeader = nullptr;
 byte sendData = 0;
 
 void processControl(Control *control) {
-  switch (*control) {
+  switch ((byte)*control) {
   case Null: { // do nothing
     break;
   }
   case StartOfHeading: {
-    byte *firstByte = (byte *)control++;
+    byte *firstByte = (byte *)control;
     processHeader(firstByte);
     break;
   }
@@ -22,7 +22,8 @@ void processControl(Control *control) {
     break;
   }
   default: {
-    Serial.println("Error: Unexpected control character");
+    Serial.print("Error: Unexpected control character ->");
+    Serial.println(String((byte)*control, DEC));
     sendError(UnexpectedControl);
     break;
   }
@@ -30,9 +31,11 @@ void processControl(Control *control) {
 }
 
 void processHeader(byte *firstByte) {
-  if (firstByte == 0) {
-    receivedHeader = (Header *)++firstByte;
-    if (receivedHeader->packetNumber > lastHeader->packetNumber) {
+  if (firstByte) {
+    firstByte++;
+    receivedHeader = (Header *)firstByte;
+    if (!lastHeader ||
+        receivedHeader->packetNumber > lastHeader->packetNumber) {
       copyHeader(receivedHeader, lastHeader);
       bool success = false;
       if (receivedHeader->ioType == 1) {
@@ -55,6 +58,9 @@ void processHeader(byte *firstByte) {
     }
     if (receivedHeader->packetNumber < lastHeader->packetNumber) {
       Serial.println("dropping message with too little packetNumber");
+      Serial.print(receivedHeader->packetNumber);
+      Serial.print(" < ");
+      Serial.println(lastHeader->packetNumber);
       sendError(UnexpectedPacket);
     }
     if (receivedHeader->packetNumber == 0) {
@@ -69,10 +75,7 @@ void processHeader(byte *firstByte) {
 }
 
 void copyHeader(Header *from, Header *to) {
-  to->packetNumber = from->packetNumber;
-  to->pin = from->pin;
-  to->ioType = from->ioType;
-  to->writeValue = from->writeValue;
+  memcpy(to, from, sizeof(Header));
 }
 
 void sendResponse() {

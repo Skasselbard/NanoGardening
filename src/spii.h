@@ -7,7 +7,7 @@ class Spii {
 private:
 public:
   static void write(String message);
-  static String read();
+  static byte *read();
   static void initAsSlave();
   // void initAsMaster();
 
