@@ -3,6 +3,13 @@
 
 #include "Arduino.h"
 
+enum State{
+  WaitForStart,
+  Header,
+  Message,
+  WaitForEnd
+};
+
 class Spii {
 private:
 public:

@@ -21,7 +21,7 @@ enum Error {
   UnexpectedControl = 3
 };
 
-struct Header {
+struct Headerr {
   u32 packetNumber;
   byte pin;
   byte ioType; // 1 = In = write; 0 = Out = read;
@@ -30,7 +30,7 @@ struct Header {
 
 void processControl(Control *control);
 void processHeader(byte *firstByte);
-void copyHeader(Header *from, Header *to);
+void copyHeader(Headerr *from, Headerr *to);
 void sendResponse();
 void sendHeartbeat();
 void sendError(Error error);

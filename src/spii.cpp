@@ -2,6 +2,7 @@
 
 #include "manager.h"
 #include "spii.h"
+#include "protocoll.h"
 #include <QueueList.h>
 
 #define BUFFER_SIZE 20
@@ -13,6 +14,7 @@ byte writeMessagePosition = 0;
 QueueList<byte *> readData = QueueList<byte *>();
 QueueList<String> writeData = QueueList<String>();
 bool messageComplete = false;
+State state = State::WaitForStart;
 
 void Spii::printBuffer() {
   Serial.print("inputbuffer: ");
@@ -68,8 +70,30 @@ ISR(SPI_STC_vect) {
   if (inputBufferPosition < BUFFER_SIZE - 1) {
     inputBufferPosition++;
   }
-  if (received == 0x04) {
-    processMessage();
+  switch (state){
+    case State::WaitForStart: {
+      if (received == Control::StartOfHeading) {
+        state = State::Header;
+      }
+      break;
+    }
+    case State::Header:{
+      if (received == Control::StartOfText) {
+        state = State::Message;
+      }
+      break;
+    }
+    case State::Message:{
+    if (received == Control::EndOfText) {
+      state = State::WaitForEnd;
+    }
+    case State::WaitForEnd:{
+      if (received == Control::EndOfTransmission) {
+        state = State::WaitForStart;
+        processMessage();
+      }
+    }
+  }
   }
 } // end of interrupt routine SPI_STC_vect
 

@@ -3,8 +3,8 @@
 
 #include "manager.h"
 
-Header *lastHeader = (Header *)calloc(1, sizeof(Header));
-Header *receivedHeader = nullptr;
+Headerr *lastHeader = (Headerr *)calloc(1, sizeof(Headerr));
+Headerr *receivedHeader = nullptr;
 byte sendData = 0;
 
 void processControl(Control *control) {
@@ -33,7 +33,7 @@ void processControl(Control *control) {
 void processHeader(byte *firstByte) {
   if (firstByte) {
     firstByte++;
-    receivedHeader = (Header *)firstByte;
+    receivedHeader = (Headerr *)firstByte;
     if (!lastHeader ||
         receivedHeader->packetNumber > lastHeader->packetNumber) {
       copyHeader(receivedHeader, lastHeader);
@@ -74,27 +74,27 @@ void processHeader(byte *firstByte) {
   }
 }
 
-void copyHeader(Header *from, Header *to) {
-  memcpy(to, from, sizeof(Header));
+void copyHeader(Headerr *from, Headerr *to) {
+  memcpy(to, from, sizeof(Headerr));
 }
 
 void sendResponse() {
   String message;
-  message += Acknowledge;
-  message += sendData;
-  message += EndOfTransmission;
+  message += (byte)Acknowledge;
+  message += (byte)sendData;
+  message += (byte)EndOfTransmission;
   Spii::write(message);
 }
 void sendHeartbeat() {
   String message;
-  message += Acknowledge;
-  message += EndOfTransmission;
+  message += (byte)Acknowledge;
+  message += (byte)EndOfTransmission;
   Spii::write(message);
 }
 void sendError(Error error) {
   String message;
-  message += NegativeAcknowledge;
-  message += error;
-  message += EndOfTransmission;
+  message += (byte)NegativeAcknowledge;
+  message += (byte)error;
+  message += (byte)EndOfTransmission;
   Spii::write(message);
 }
