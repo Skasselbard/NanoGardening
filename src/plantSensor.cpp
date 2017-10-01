@@ -1,10 +1,10 @@
 #include "plantSensor.h"
 #include "Arduino.h"
 
-PlantSensor::PlantSensor(uint8_t pin) {
-  pinMode(pin, INPUT);
-  pinNumber = pin;
-  ioType = Read;
+PlantSensor::PlantSensor(uint8_t pin) : AnalogPin(pin, IOType::Read) {
+  // pinMode(pin, INPUT);
+  // pinNumber = pin;
+  // ioType = Read;
 }
 
 int PlantSensor::readValue() {

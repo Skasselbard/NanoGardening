@@ -24,6 +24,7 @@ void Manager::initializeComponents() {
   }
 }
 bool Manager::readPin(byte pin, byte *valueOut) {
+  setVCC();
   Pin *component = components[pin];
   if (component->isAnalog()) {
     *valueOut = ((AnalogPin *)component)->readValue();
@@ -31,6 +32,7 @@ bool Manager::readPin(byte pin, byte *valueOut) {
   if (!component->isAnalog()) {
     *valueOut = ((DigitalPin *)component)->readValue();
   }
+  unsetVCC();
   return false;
 }
 bool Manager::writePin(byte pin, byte writeValue) {
@@ -59,3 +61,9 @@ void Manager::eventLoop() {
   Serial.flush();
   delay(1000);
 }
+
+void Manager::setVCC() {
+  vcc.writeValue(HIGH);
+  delay(200);
+}
+void Manager::unsetVCC() { vcc.writeValue(LOW); }
