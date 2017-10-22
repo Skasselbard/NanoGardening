@@ -33,7 +33,7 @@ bool Manager::readPin(byte pin, byte *valueOut) {
     *valueOut = ((DigitalPin *)component)->readValue();
   }
   unsetVCC();
-  return false;
+  return true;
 }
 bool Manager::writePin(byte pin, byte writeValue) {
   Pin *component = components[pin];

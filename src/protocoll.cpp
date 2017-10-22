@@ -5,7 +5,7 @@
 
 Headerr *lastHeader = (Headerr *)calloc(1, sizeof(Headerr));
 Headerr *receivedHeader = nullptr;
-byte sendData = 0;
+byte sendData = 0; // TODO: make multibyte
 
 void processControl(Control *control) {
   switch ((byte)*control) {
@@ -80,21 +80,21 @@ void copyHeader(Headerr *from, Headerr *to) {
 
 void sendResponse() {
   String message;
-  message += (byte)Acknowledge;
+  message += (char)Acknowledge;
   message += (byte)sendData;
-  message += (byte)EndOfTransmission;
+  message += (char)EndOfTransmission;
   Spii::write(message);
 }
 void sendHeartbeat() {
   String message;
-  message += (byte)Acknowledge;
-  message += (byte)EndOfTransmission;
+  message += (char)Acknowledge;
+  message += (char)EndOfTransmission;
   Spii::write(message);
 }
 void sendError(Error error) {
   String message;
-  message += (byte)NegativeAcknowledge;
-  message += (byte)error;
-  message += (byte)EndOfTransmission;
+  message += (char)NegativeAcknowledge;
+  message += (char)error;
+  message += (char)EndOfTransmission;
   Spii::write(message);
 }

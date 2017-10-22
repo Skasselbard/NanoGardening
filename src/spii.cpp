@@ -1,8 +1,8 @@
 #include <SPI.h>
 
 #include "manager.h"
-#include "spii.h"
 #include "protocoll.h"
+#include "spii.h"
 #include <QueueList.h>
 
 #define BUFFER_SIZE 20
@@ -67,32 +67,33 @@ ISR(SPI_STC_vect) {
   byte received = SPDR;
   inputBuffer[inputBufferPosition] = received; // SPDR;
   SPDR = getNextSendCharacter();
+  // Serial.println(HEX, SPDR);
   if (inputBufferPosition < BUFFER_SIZE - 1) {
     inputBufferPosition++;
   }
-  switch (state){
-    case State::WaitForStart: {
-      if (received == Control::StartOfHeading) {
-        state = State::Header;
-      }
-      break;
+  switch (state) {
+  case State::WaitForStart: {
+    if (received == Control::StartOfHeading) {
+      state = State::Header;
     }
-    case State::Header:{
-      if (received == Control::StartOfText) {
-        state = State::Message;
-      }
-      break;
+    break;
+  }
+  case State::Header: {
+    if (received == Control::StartOfText) {
+      state = State::Message;
     }
-    case State::Message:{
+    break;
+  }
+  case State::Message: {
     if (received == Control::EndOfText) {
       state = State::WaitForEnd;
     }
-    case State::WaitForEnd:{
-      if (received == Control::EndOfTransmission) {
-        state = State::WaitForStart;
-        processMessage();
-      }
+  case State::WaitForEnd: {
+    if (received == Control::EndOfTransmission) {
+      state = State::WaitForStart;
+      processMessage();
     }
+  }
   }
   }
 } // end of interrupt routine SPI_STC_vect
