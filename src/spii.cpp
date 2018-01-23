@@ -1,18 +1,17 @@
 #include <SPI.h>
 
 #include "manager.h"
-#include "protocoll.h"
+#include "messageQueue.h"
 #include "spii.h"
-#include <QueueList.h>
 
 #define BUFFER_SIZE 20
 
-char inputBuffer[BUFFER_SIZE];
+byte inputBuffer[BUFFER_SIZE];
 byte inputBufferPosition;
-String currentWriteMessage = "";
+Message *currentWriteMessage = nullptr;
 byte writeMessagePosition = 0;
-QueueList<byte *> readData = QueueList<byte *>();
-QueueList<String> writeData = QueueList<String>();
+MessageQueue readData = MessageQueue();
+MessageQueue writeData = MessageQueue();
 bool messageComplete = false;
 State state = State::WaitForStart;
 
@@ -24,67 +23,58 @@ void Spii::printBuffer() {
   Serial.println();
 }
 
-// prints only the next element
-void Spii::printReadData() {
-  Serial.println("ReadData: ");
-  if (!readData.isEmpty()) {
-    for (int i = 0; readData.peek()[i] != 0x04; i++) {
-      Serial.print(String(readData.peek()[i], DEC) + ".");
-    }
-  }
-  Serial.println();
-}
-
 void processMessage() {
-  byte *message = (byte *)malloc(sizeof(byte) * inputBufferPosition);
-  for (int i = 0; i < inputBufferPosition; i++) {
-    message[i] = inputBuffer[i];
-    inputBuffer[i] = 0;
-  }
-  readData.push(message);
+  // byte *message = (byte *)malloc(sizeof(byte) * inputBufferPosition);
+  // for (int i = 0; i < inputBufferPosition; i++) {
+  //   message[i] = inputBuffer[i];
+  //   inputBuffer[i] = 0;
+  // }
+  readData.push(new Message((uint8_t *)&inputBuffer));
   inputBufferPosition = 0;
 }
 
 byte getNextSendCharacter() {
-  if (currentWriteMessage == "") {
-    if (writeData.isEmpty()) { // nothing to write
+  if (currentWriteMessage) {
+    if (writeData.head() == nullptr) { // nothing to write
       return 0x00;
     }
     currentWriteMessage = writeData.pop();
     writeMessagePosition = 0;
+    if (writeMessagePosition + 1 ==
+        currentWriteMessage->length()) { // end of message
+      delete currentWriteMessage;
+      currentWriteMessage = nullptr;
+      return 0x00;
+    }
+    writeMessagePosition++;
+    return (currentWriteMessage->data())[writeMessagePosition - 1];
   }
-  if (writeMessagePosition + 1 ==
-      currentWriteMessage.length()) { // end of message
-    currentWriteMessage = "";
-    return 0x00;
-  }
-  writeMessagePosition++;
-  return (currentWriteMessage)[writeMessagePosition - 1];
+  return 0x00;
 }
 
 // SPI interrupt routine
 ISR(SPI_STC_vect) {
   byte received = SPDR;
+  Serial.println(String(SPDR, DEC));
   inputBuffer[inputBufferPosition] = received; // SPDR;
   SPDR = getNextSendCharacter();
-  // Serial.println(HEX, SPDR);
   if (inputBufferPosition < BUFFER_SIZE - 1) {
     inputBufferPosition++;
   }
   switch (state) {
   case State::WaitForStart: {
     if (received == Control::StartOfHeading) {
-      state = State::Header;
+      state = State::ProcessHeader;
     }
     break;
   }
-  case State::Header: {
+  case State::ProcessHeader: {
     if (received == Control::StartOfText) {
-      state = State::Message;
+      state = State::ProcessMessage;
     }
     break;
   }
-  case State::Message: {
+  case State::ProcessMessage: {
     if (received == Control::EndOfText) {
       state = State::WaitForEnd;
     }
@@ -111,10 +101,10 @@ void Spii::initAsSlave() {
   SPI.attachInterrupt();
 }
 
-void Spii::write(String message) { writeData.push(String(message)); }
+void Spii::write(Message *message) { writeData.push(message); }
 
-byte *Spii::read() {
-  if (readData.isEmpty()) {
+Message *Spii::read() {
+  if (readData.head() == nullptr) {
     return nullptr;
   } else {
     return readData.pop();

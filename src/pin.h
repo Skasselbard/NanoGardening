@@ -29,13 +29,7 @@ public:
   DigitalPin(u8 pinNumber, IOType io) : Pin(pinNumber, io) {}
   bool isAnalog() { return false; }
   virtual bool readValue() { return digitalRead(pinNumber); }
-  virtual void writeValue(bool value) {
-    if (ioType == IOType::Write) {
-      digitalWrite(pinNumber, value);
-    } else {
-      Serial.println("Cant write digital pin configured as read pin.");
-    }
-  }
+  virtual void writeValue(bool value);
 };
 
 class AnalogPin : public Pin {

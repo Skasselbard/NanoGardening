@@ -18,19 +18,21 @@ Manager::Manager() {
 }
 
 void Manager::initializeComponents() {
-  for (u8 i = A0; i <= A7; i++) {
+  for (uint8_t i = A0; i <= A7; i++) {
     PlantSensor *sensor = new PlantSensor(i);
     components[i] = sensor;
   }
 }
-bool Manager::readPin(byte pin, byte *valueOut) {
+bool Manager::readPin(byte pin, unsigned int *valueOut) {
   setVCC();
   Pin *component = components[pin];
   if (component->isAnalog()) {
-    *valueOut = ((AnalogPin *)component)->readValue();
+    *valueOut =
+        static_cast<unsigned int>(((AnalogPin *)component)->readValue());
   }
   if (!component->isAnalog()) {
-    *valueOut = ((DigitalPin *)component)->readValue();
+    *valueOut =
+        static_cast<unsigned int>(((DigitalPin *)component)->readValue());
   }
   unsetVCC();
   return true;
@@ -38,7 +40,7 @@ bool Manager::readPin(byte pin, byte *valueOut) {
 bool Manager::writePin(byte pin, byte writeValue) {
   Pin *component = components[pin];
   if (component->isAnalog()) {
-    ((AnalogPin *)component)->writeValue((u8)writeValue);
+    ((AnalogPin *)component)->writeValue((uint8_t)writeValue);
   }
   if (!component->isAnalog()) {
     ((DigitalPin *)component)->writeValue((bool)writeValue);
@@ -47,15 +49,15 @@ bool Manager::writePin(byte pin, byte writeValue) {
 }
 
 void Manager::eventLoop() {
-  byte *rx = Spii::read();
+  Message *rx = Spii::read();
   if (rx) {
     Serial.print("Manager got Message: ");
-    for (int i = 0; rx[i] != 0x04; i++) {
-      Serial.print(String(rx[i], DEC) + ".");
+    for (int i = 0; rx->data()[i] != 0x04; i++) {
+      Serial.print(String(rx->data()[i], DEC) + ".");
     }
     Serial.println();
-    processControl((Control *)rx);
-    free(rx);
+    processControl((Control *)rx->data());
+    delete rx;
   }
   // Spii::printReadData();
   Serial.flush();

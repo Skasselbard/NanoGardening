@@ -1,20 +1,16 @@
 #ifndef SPII
 #define SPII
 
-#include "Arduino.h"
+#include "message.h"
+#include <Arduino.h>
 
-enum State{
-  WaitForStart,
-  Header,
-  Message,
-  WaitForEnd
-};
+enum State { WaitForStart, ProcessHeader, ProcessMessage, WaitForEnd };
 
 class Spii {
 private:
 public:
-  static void write(String message);
-  static byte *read();
+  static void write(Message *message);
+  static Message *read();
   static void initAsSlave();
   // void initAsMaster();
 

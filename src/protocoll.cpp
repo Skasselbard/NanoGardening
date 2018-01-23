@@ -1,23 +1,27 @@
 #include "protocoll.h"
-#include "spii.h"
-
 #include "manager.h"
+#include "message.h"
+#include "spii.h"
 
 Headerr *lastHeader = (Headerr *)calloc(1, sizeof(Headerr));
 Headerr *receivedHeader = nullptr;
-byte sendData = 0; // TODO: make multibyte
+unsigned int sendData = 0;
 
 void processControl(Control *control) {
+  Serial.println("Processing");
   switch ((byte)*control) {
   case Null: { // do nothing
+    Serial.println("got NULL");
     break;
   }
   case StartOfHeading: {
+    Serial.println("got StartOfHeading");
     byte *firstByte = (byte *)control;
     processHeader(firstByte);
     break;
   }
   case Enquiry: {
+    Serial.println("got Enquiry");
     sendHeartbeat();
     break;
   }
@@ -51,10 +55,12 @@ void processHeader(byte *firstByte) {
       } else {
         copyHeader(receivedHeader, lastHeader);
         sendResponse();
+        return;
       }
     }
     if (receivedHeader->packetNumber == lastHeader->packetNumber) {
       sendResponse();
+      return;
     }
     if (receivedHeader->packetNumber < lastHeader->packetNumber) {
       Serial.println("dropping message with too little packetNumber");
@@ -62,12 +68,14 @@ void processHeader(byte *firstByte) {
       Serial.print(" < ");
       Serial.println(lastHeader->packetNumber);
       sendError(UnexpectedPacket);
+      return;
     }
     if (receivedHeader->packetNumber == 0) {
       Serial.println("resetting packetNumber");
       copyHeader(receivedHeader, lastHeader);
       sendData = 0;
       sendResponse();
+      return;
     }
   } else {
     Serial.println("dropping message with header of unknown type");
@@ -79,22 +87,28 @@ void copyHeader(Headerr *from, Headerr *to) {
 }
 
 void sendResponse() {
-  String message;
-  message += (char)Acknowledge;
-  message += (byte)sendData;
-  message += (char)EndOfTransmission;
-  Spii::write(message);
+  Serial.println("Sending response");
+  uint8_t data[4];
+  data[0] = (uint8_t)Acknowledge;
+  data[1] = sendData;
+  data[2] = (uint8_t)EndOfTransmission;
+  data[3] = 0x00;
+  Spii::write(new Message((u8 *)&data, 4));
 }
 void sendHeartbeat() {
-  String message;
-  message += (char)Acknowledge;
-  message += (char)EndOfTransmission;
-  Spii::write(message);
+  Serial.println("Sending Heartbeat");
+  uint8_t data[3];
+  data[0] = (uint8_t)Acknowledge;
+  data[1] = (uint8_t)EndOfTransmission;
+  data[2] = 0x00;
+  Spii::write(new Message((uint8_t *)&data, 3));
 }
 void sendError(Error error) {
-  String message;
-  message += (char)NegativeAcknowledge;
-  message += (char)error;
-  message += (char)EndOfTransmission;
-  Spii::write(message);
+  Serial.println("Sending Error");
+  uint8_t data[4];
+  data[0] = (uint8_t)NegativeAcknowledge;
+  data[1] = (uint8_t)error;
+  data[2] = (uint8_t)EndOfTransmission;
+  data[3] = 0x00;
+  Spii::write(new Message((uint8_t *)&data, 4));
 }

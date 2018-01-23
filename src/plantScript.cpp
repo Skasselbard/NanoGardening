@@ -2,11 +2,10 @@
 #define PLANTSCRIPT
 
 #include "manager.h"
-#include <Arduino.h>
 
 int main() {
   init();
-  Serial.begin(9600);
+  Serial.begin(115200);
   Manager *manager = new Manager();
 }
 

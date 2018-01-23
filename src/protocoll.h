@@ -25,7 +25,7 @@ struct Headerr {
   u32 packetNumber;
   byte pin;
   byte ioType; // 1 = In = write; 0 = Out = read;
-  byte writeValue;
+  unsigned int writeValue;
 };
 
 void processControl(Control *control);
