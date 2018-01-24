@@ -24,19 +24,20 @@ void Spii::printBuffer() {
 }
 
 void processMessage() {
-  Spii::printBuffer();
+  // Spii::printBuffer();
   readData.push(
       new Message((byte *)&inputBuffer, (unsigned int)inputBufferPosition));
   inputBufferPosition = 0;
 }
 
 byte getNextSendCharacter() {
-  if (currentWriteMessage) {
-    if (writeData.head() == nullptr) { // nothing to write
-      return 0x00;
-    }
+  if (!currentWriteMessage && writeData.head()) {
     currentWriteMessage = writeData.pop();
     writeMessagePosition = 0;
+    // Serial.print("poped write data: ");
+    // currentWriteMessage->print();
+  }
+  if (currentWriteMessage) {
     if (writeMessagePosition + 1 ==
         currentWriteMessage->length()) { // end of message
       delete currentWriteMessage;
@@ -52,9 +53,9 @@ byte getNextSendCharacter() {
 // SPI interrupt routine
 ISR(SPI_STC_vect) {
   byte received = SPDR;
-  Serial.println(String(SPDR, DEC));
   inputBuffer[inputBufferPosition] = received; // SPDR;
   SPDR = getNextSendCharacter();
+  // Serial.println(String(SPDR, DEC));
   if (inputBufferPosition < BUFFER_SIZE - 1) {
     inputBufferPosition++;
   }
@@ -75,12 +76,13 @@ ISR(SPI_STC_vect) {
     if (received == Control::EndOfText) {
       state = State::WaitForEnd;
     }
+    break;
+  }
   case State::WaitForEnd: {
     if (received == Control::EndOfTransmission) {
       state = State::WaitForStart;
       processMessage();
     }
-  }
   }
   }
 } // end of interrupt routine SPI_STC_vect
@@ -99,8 +101,8 @@ void Spii::initAsSlave() {
 }
 
 void Spii::write(Message *message) {
-  Serial.print("pushed message to spii: ");
-  message->print();
+  // Serial.print("pushed message to spii: ");
+  // message->print();
   writeData.push(message);
 }
 

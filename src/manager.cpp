@@ -52,14 +52,10 @@ void Manager::eventLoop() {
   Message *rx = Spii::read();
   if (rx) {
     Serial.print("Manager got Message: ");
-    for (int i = 0; rx->data()[i] != 0x04; i++) {
-      Serial.print(String(rx->data()[i], DEC) + ".");
-    }
-    Serial.println();
+    rx->print();
     processControl((Control *)rx->data());
     delete rx;
   }
-  // Spii::printReadData();
   Serial.flush();
   delay(1000);
 }

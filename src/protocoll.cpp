@@ -8,20 +8,20 @@ Headerr *receivedHeader = nullptr;
 unsigned int sendData = 0;
 
 void processControl(Control *control) {
-  Serial.println("Processing");
+  // Serial.println("Processing");
   switch ((byte)*control) {
   case Null: { // do nothing
     Serial.println("got NULL");
     break;
   }
   case StartOfHeading: {
-    Serial.println("got StartOfHeading");
+    // Serial.println("got StartOfHeading");
     byte *firstByte = (byte *)control;
     processHeader(firstByte);
     break;
   }
   case Enquiry: {
-    Serial.println("got Enquiry");
+    // Serial.println("got Enquiry");
     sendHeartbeat();
     break;
   }
