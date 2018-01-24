@@ -88,27 +88,27 @@ void copyHeader(Headerr *from, Headerr *to) {
 
 void sendResponse() {
   Serial.println("Sending response");
-  uint8_t data[4];
-  data[0] = (uint8_t)Acknowledge;
+  byte data[4];
+  data[0] = (byte)Acknowledge;
   data[1] = sendData;
-  data[2] = (uint8_t)EndOfTransmission;
+  data[2] = (byte)EndOfTransmission;
   data[3] = 0x00;
-  Spii::write(new Message((u8 *)&data, 4));
+  Spii::write(new Message((byte *)&data, 4));
 }
 void sendHeartbeat() {
   Serial.println("Sending Heartbeat");
-  uint8_t data[3];
-  data[0] = (uint8_t)Acknowledge;
-  data[1] = (uint8_t)EndOfTransmission;
+  byte data[3];
+  data[0] = (byte)Acknowledge;
+  data[1] = (byte)EndOfTransmission;
   data[2] = 0x00;
-  Spii::write(new Message((uint8_t *)&data, 3));
+  Spii::write(new Message((byte *)&data, 3));
 }
 void sendError(Error error) {
   Serial.println("Sending Error");
-  uint8_t data[4];
-  data[0] = (uint8_t)NegativeAcknowledge;
-  data[1] = (uint8_t)error;
-  data[2] = (uint8_t)EndOfTransmission;
+  byte data[4];
+  data[0] = (byte)NegativeAcknowledge;
+  data[1] = (byte)error;
+  data[2] = (byte)EndOfTransmission;
   data[3] = 0x00;
-  Spii::write(new Message((uint8_t *)&data, 4));
+  Spii::write(new Message((byte *)&data, 4));
 }

@@ -5,7 +5,7 @@
 
 class PlantSensor : public AnalogPin {
 public:
-  PlantSensor(uint8_t);
+  PlantSensor(byte);
   int readHumidity() { return readValue(); }
   int readPlantSensor() { return readValue(); }
   int readValue();

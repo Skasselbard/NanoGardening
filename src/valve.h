@@ -5,8 +5,8 @@
 
 class Valve {
 private:
-  static const uint8_t valve = 2;
-  static const uint8_t valveRead = 3;
+  static const byte valve = 2;
+  static const byte valveRead = 3;
   bool valveOpen;
 
 public:

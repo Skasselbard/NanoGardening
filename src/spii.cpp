@@ -24,12 +24,9 @@ void Spii::printBuffer() {
 }
 
 void processMessage() {
-  // byte *message = (byte *)malloc(sizeof(byte) * inputBufferPosition);
-  // for (int i = 0; i < inputBufferPosition; i++) {
-  //   message[i] = inputBuffer[i];
-  //   inputBuffer[i] = 0;
-  // }
-  readData.push(new Message((uint8_t *)&inputBuffer));
+  Spii::printBuffer();
+  readData.push(
+      new Message((byte *)&inputBuffer, (unsigned int)inputBufferPosition));
   inputBufferPosition = 0;
 }
 

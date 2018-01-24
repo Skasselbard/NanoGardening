@@ -18,7 +18,7 @@ Manager::Manager() {
 }
 
 void Manager::initializeComponents() {
-  for (uint8_t i = A0; i <= A7; i++) {
+  for (byte i = A0; i <= A7; i++) {
     PlantSensor *sensor = new PlantSensor(i);
     components[i] = sensor;
   }
@@ -40,7 +40,7 @@ bool Manager::readPin(byte pin, unsigned int *valueOut) {
 bool Manager::writePin(byte pin, byte writeValue) {
   Pin *component = components[pin];
   if (component->isAnalog()) {
-    ((AnalogPin *)component)->writeValue((uint8_t)writeValue);
+    ((AnalogPin *)component)->writeValue((byte)writeValue);
   }
   if (!component->isAnalog()) {
     ((DigitalPin *)component)->writeValue((bool)writeValue);

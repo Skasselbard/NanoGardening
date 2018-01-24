@@ -7,11 +7,11 @@ enum IOType { Read = 0, Write = 1 };
 
 class Pin {
 protected:
-  uint8_t pinNumber;
+  byte pinNumber;
   IOType ioType;
 
 public:
-  Pin(u8 pin, IOType io) {
+  Pin(byte pin, IOType io) {
     pinNumber = pin;
     ioType = io;
     if (ioType == IOType::Read) {
@@ -21,12 +21,12 @@ public:
     }
   }
   virtual bool isAnalog() = 0;
-  uint8_t getPinNumber() { return pinNumber; }
+  byte getPinNumber() { return pinNumber; }
 };
 
 class DigitalPin : public Pin {
 public:
-  DigitalPin(u8 pinNumber, IOType io) : Pin(pinNumber, io) {}
+  DigitalPin(byte pinNumber, IOType io) : Pin(pinNumber, io) {}
   bool isAnalog() { return false; }
   virtual bool readValue() { return digitalRead(pinNumber); }
   virtual void writeValue(bool value);
@@ -34,7 +34,7 @@ public:
 
 class AnalogPin : public Pin {
 public:
-  AnalogPin(u8 pinNumber, IOType io) : Pin(pinNumber, io) {}
+  AnalogPin(byte pinNumber, IOType io) : Pin(pinNumber, io) {}
   bool isAnalog() { return true; }
   virtual int readValue() = 0;
   virtual void writeValue(int) = 0;
