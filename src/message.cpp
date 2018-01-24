@@ -22,3 +22,10 @@ Message::Message(byte *message, unsigned int length) {
   _data = (byte *)malloc(_length * sizeof(byte));
   memcpy(_data, message, _length);
 }
+
+void Message::print() {
+  for (int i = 0; i < _length; i++) {
+    Serial.print(String(_data[i], DEC) + ".");
+  }
+  Serial.println();
+}

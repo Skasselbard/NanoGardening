@@ -26,6 +26,8 @@ public:
     }
     return i;
   }
+
+  void print();
 };
 
 #endif

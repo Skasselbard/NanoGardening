@@ -98,7 +98,11 @@ void Spii::initAsSlave() {
   SPI.attachInterrupt();
 }
 
-void Spii::write(Message *message) { writeData.push(message); }
+void Spii::write(Message *message) {
+  Serial.print("pushed message to spii: ");
+  message->print();
+  writeData.push(message);
+}
 
 Message *Spii::read() {
   if (readData.head() == nullptr) {
