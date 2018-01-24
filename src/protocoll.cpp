@@ -87,28 +87,34 @@ void copyHeader(Headerr *from, Headerr *to) {
 }
 
 void sendResponse() {
-  Serial.println("Sending response");
-  byte data[4];
+  unsigned int hsize = sizeof(Headerr);
+  unsigned int arraySize = 5 + hsize;
+  byte data[arraySize];
   data[0] = (byte)Acknowledge;
-  data[1] = sendData;
-  data[2] = (byte)EndOfTransmission;
-  data[3] = 0x00;
-  Spii::write(new Message((byte *)&data, 4));
+  data[1] = (byte)StartOfHeading;
+  copyHeader(receivedHeader, (Headerr *)&data[2]);
+  data[1 + hsize] = (byte)StartOfText;
+  data[2 + hsize] = sendData;
+  data[3 + hsize] = (byte)EndOfText;
+  data[4 + hsize] = (byte)EndOfTransmission;
+  Spii::write(new Message((byte *)&data, arraySize));
 }
 void sendHeartbeat() {
-  Serial.println("Sending Heartbeat");
-  byte data[3];
+  byte data[2];
   data[0] = (byte)Acknowledge;
   data[1] = (byte)EndOfTransmission;
-  data[2] = 0x00;
-  Spii::write(new Message((byte *)&data, 3));
+  Spii::write(new Message((byte *)&data, 2));
 }
 void sendError(Error error) {
-  Serial.println("Sending Error");
-  byte data[4];
+  unsigned int hsize = sizeof(Headerr);
+  unsigned int arraySize = 5 + hsize;
+  byte data[arraySize];
   data[0] = (byte)NegativeAcknowledge;
-  data[1] = (byte)error;
-  data[2] = (byte)EndOfTransmission;
-  data[3] = 0x00;
-  Spii::write(new Message((byte *)&data, 4));
+  data[1] = (byte)StartOfHeading;
+  copyHeader(receivedHeader, (Headerr *)&data[2]);
+  data[1 + hsize] = (byte)StartOfText;
+  data[2 + hsize] = (byte)error;
+  data[3 + hsize] = (byte)EndOfText;
+  data[4 + hsize] = (byte)EndOfTransmission;
+  Spii::write(new Message((byte *)&data, arraySize));
 }

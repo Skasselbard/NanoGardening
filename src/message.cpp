@@ -25,7 +25,8 @@ Message::Message(byte *message, unsigned int length) {
 
 void Message::print() {
   for (int i = 0; i < _length; i++) {
-    Serial.print(String(_data[i], DEC) + ".");
+    Serial.print(_data[i], DEC);
+    Serial.print('.');
   }
   Serial.println();
 }

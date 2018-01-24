@@ -4,7 +4,7 @@
 #include "messageQueue.h"
 #include "spii.h"
 
-#define BUFFER_SIZE 20
+#define BUFFER_SIZE 50
 
 byte inputBuffer[BUFFER_SIZE];
 byte inputBufferPosition;
@@ -34,7 +34,7 @@ byte getNextSendCharacter() {
   if (!currentWriteMessage && writeData.head()) {
     currentWriteMessage = writeData.pop();
     writeMessagePosition = 0;
-    // Serial.print("poped write data: ");
+    // Serial.print("Sending data: ");
     // currentWriteMessage->print();
   }
   if (currentWriteMessage) {
@@ -101,8 +101,8 @@ void Spii::initAsSlave() {
 }
 
 void Spii::write(Message *message) {
-  // Serial.print("pushed message to spii: ");
-  // message->print();
+  Serial.print("pushed message to spii: ");
+  message->print();
   writeData.push(message);
 }
 
