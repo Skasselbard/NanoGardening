@@ -56,9 +56,6 @@ ISR(SPI_STC_vect) {
   inputBuffer[inputBufferPosition] = received; // SPDR;
   SPDR = getNextSendCharacter();
   // Serial.println(String(SPDR, DEC));
-  if (inputBufferPosition < BUFFER_SIZE - 1) {
-    inputBufferPosition++;
-  }
   switch (state) {
   case State::WaitForStart: {
     if (received == Control::StartOfHeading) {
@@ -83,7 +80,13 @@ ISR(SPI_STC_vect) {
       state = State::WaitForStart;
       processMessage();
     }
+    break;
   }
+  }
+  if (state != State::WaitForStart) {
+    if (inputBufferPosition < BUFFER_SIZE - 1) {
+      inputBufferPosition++;
+    }
   }
 } // end of interrupt routine SPI_STC_vect
 
