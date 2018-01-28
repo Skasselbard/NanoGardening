@@ -38,6 +38,13 @@ void processHeader(byte *firstByte) {
   if (firstByte) {
     firstByte++;
     receivedHeader = (Headerr *)firstByte;
+    if (receivedHeader->packetNumber == 0) {
+      Serial.println("resetting packetNumber");
+      copyHeader(receivedHeader, lastHeader);
+      sendData = 0;
+      sendResponse();
+      return;
+    }
     if (!lastHeader ||
         receivedHeader->packetNumber > lastHeader->packetNumber) {
       copyHeader(receivedHeader, lastHeader);
@@ -68,13 +75,6 @@ void processHeader(byte *firstByte) {
       Serial.print(" < ");
       Serial.println(lastHeader->packetNumber);
       sendError(UnexpectedPacket);
-      return;
-    }
-    if (receivedHeader->packetNumber == 0) {
-      Serial.println("resetting packetNumber");
-      copyHeader(receivedHeader, lastHeader);
-      sendData = 0;
-      sendResponse();
       return;
     }
   } else {
