@@ -4,4 +4,4 @@ version = "0.1.0"
 authors = ["Tom <tom.meyer89@gmail.com>"]
 
 [dependencies]
-rustpi_io = "0.1.0"
+rustpi_io = { git = "https://github.com/Skasselbard/rustpiIO", branch ="i2c" }

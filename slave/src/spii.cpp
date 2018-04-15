@@ -38,14 +38,16 @@ byte getNextSendCharacter() {
     // currentWriteMessage->print();
   }
   if (currentWriteMessage) {
-    if (writeMessagePosition + 1 ==
+    if (writeMessagePosition ==
         currentWriteMessage->length()) { // end of message
       delete currentWriteMessage;
       currentWriteMessage = nullptr;
+      writeMessagePosition = 0;
       return 0x00;
     }
+    byte sendChar = (currentWriteMessage->data())[writeMessagePosition];
     writeMessagePosition++;
-    return (currentWriteMessage->data())[writeMessagePosition - 1];
+    return sendChar;
   }
   return 0x00;
 }
