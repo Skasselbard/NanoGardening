@@ -56,6 +56,6 @@ void Manager::eventLoop() { delay(1000); }
 
 void Manager::setVCC() {
   vcc.writeValue(HIGH);
-  delay(200);
+  delay(1500);
 }
 void Manager::unsetVCC() { vcc.writeValue(LOW); }
