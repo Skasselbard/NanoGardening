@@ -17,7 +17,7 @@ public:
   Manager();
   static Manager *getInstance() { return managerInstance; }
   bool readPin(byte pin, unsigned int *valueOut);
-  bool writePin(byte pin, byte writeValue);
+  bool writePin(byte pin, unsigned int writeValue);
 };
 
 #endif

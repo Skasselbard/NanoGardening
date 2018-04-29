@@ -2,9 +2,7 @@
 #include "Arduino.h"
 
 PlantSensor::PlantSensor(byte pin) : AnalogPin(pin, IOType::Read) {
-  // pinMode(pin, INPUT);
-  // pinNumber = pin;
-  // ioType = Read;
+  pinMode(pin, INPUT);
 }
 
 int PlantSensor::readValue() {
