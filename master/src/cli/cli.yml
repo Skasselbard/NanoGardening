@@ -1,0 +1,41 @@
+name: GardeningControl
+version: "0.1"
+author: Tom Meyer <tom.meyer89@gmail.com>
+about: Control devices that are connected to a raspberry pi. 
+args:
+  - printDevices:
+      short: l
+      long: list
+#        value_name: FILE
+      help: Lists all devices that are connected with the Raspberry Pi
+#        takes_value: true
+  - printDeviceTypes:
+      short: t
+      long: printTypes
+      help: Prints all possible device types
+
+
+subcommands:
+  - valve:
+    about: controls a connected pipe
+    # version: "0.1"
+    author: Tom Meyer <tom.meyer89@gmail.com>
+    args:
+      - open:
+          long: open
+          short: o
+          help: open the valve with ID
+          value_name: ID
+          takes_value: true
+      - close:
+          long: close
+          short: c
+          help: close the valve with ID
+          value_name: ID
+          takes_value: true
+      - toggleTimed:
+          long: toggleTimed
+          short: tt
+          help: toggles the state of the valve with ID for the given time
+          value_names: ID, TIME
+          takes_value: true
