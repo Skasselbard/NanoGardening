@@ -1,5 +1,6 @@
 use rustpi_io::gpio::{GPIOData::{High, Low}, GPIOMode::Write, GPIO};
 use std::io::Result;
+use Device;
 
 pub struct Valve {
     gpio: GPIO,
@@ -29,3 +30,5 @@ impl Valve {
         Ok(self.gpio.set(Low)?)
     }
 }
+
+impl Device for Valve {}

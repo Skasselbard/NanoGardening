@@ -1,14 +1,16 @@
 use i2c_connection::{ArduinoPin, Bus};
-use std::io::Result;
+use std::io::{Error, ErrorKind, Result};
+use Device;
+use std::sync::Arc;
 
-pub struct HumiditySensor<'a> {
+pub struct HumiditySensor {
     pin: ArduinoPin,
-    bus: &'a mut Bus,
+    bus: Arc<Bus>,
     reading_count: u16,
 }
 
-impl<'a> HumiditySensor<'a> {
-    pub fn new(pin: ArduinoPin, bus: &'a mut Bus) -> Self {
+impl HumiditySensor {
+    pub fn new(pin: ArduinoPin, bus: Arc<Bus>) -> Self {
         HumiditySensor {
             pin: pin,
             bus: bus,
@@ -18,12 +20,18 @@ impl<'a> HumiditySensor<'a> {
 
     pub fn read(&mut self) -> Result<u16> {
         let mut readings = Vec::with_capacity(self.reading_count as usize);
-        for _ in 0..self.reading_count {
-            readings.push(self.bus.read_word(self.pin)?);
+        if let Some(bus) = Arc::get_mut(&mut self.bus) {
+            for _ in 0..self.reading_count {
+                readings.push(bus.read_word(self.pin)?);
+            }
+            Ok(smooth_readings(readings))
+        } else {
+            Err(Error::new(ErrorKind::PermissionDenied, "Bus in use"))
         }
-        Ok(smooth_readings(readings))
     }
 }
+
+impl Device for HumiditySensor {}
 
 fn smooth_readings(readings: Vec<u16>) -> u16 {
     let mut average = 0;

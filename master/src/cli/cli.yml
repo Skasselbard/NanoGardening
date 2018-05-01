@@ -39,3 +39,16 @@ subcommands:
           help: toggles the state of the valve with ID for the given time
           value_names: ID, TIME
           takes_value: true
+
+subcommands:
+  - humidity:
+    about: reads a connected humidity sensor
+    # version: "0.1"
+    author: Tom Meyer <tom.meyer89@gmail.com>
+    args:
+      - id:
+          short: id
+          help: reads the sensor with the given id
+          value_name: ID
+          takes_value: true
+          required: true
