@@ -1,6 +1,6 @@
 use rustpi_io::i2c::I2CPi;
-use std::{thread, time};
 use std::io::Result;
+use std::{thread, time};
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone)]

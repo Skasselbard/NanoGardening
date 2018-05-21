@@ -1,7 +1,8 @@
 pub mod humidity_sensor;
 pub mod valve;
 
-use std::io::Result;
+use downcast_rs::Downcast;
+use std;
 
 pub struct DeviceName {
     id: String,
@@ -28,21 +29,22 @@ impl DeviceName {
     }
 }
 
-pub trait Device {
+pub trait Device: Downcast {
     fn name(&mut self) -> &mut DeviceName;
     fn set_id(&mut self, id: String);
     fn get_id(&self) -> &str;
 }
+impl_downcast!(Device);
 
 pub trait Sensor: Device {
-    fn read(&mut self) -> Result<u16>;
+    fn read(&mut self) -> std::io::Result<u16>;
 }
 
 pub trait Switch: Device {
-    fn is_open(&mut self) -> Result<bool>;
-    fn open(&mut self) -> Result<()>;
-    fn close(&mut self) -> Result<()>;
-    fn toggle(&mut self) -> Result<()> {
+    fn is_open(&mut self) -> std::io::Result<bool>;
+    fn open(&mut self) -> std::io::Result<()>;
+    fn close(&mut self) -> std::io::Result<()>;
+    fn toggle(&mut self) -> std::io::Result<()> {
         if self.is_open()? {
             self.close()
         } else {

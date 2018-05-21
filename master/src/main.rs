@@ -2,67 +2,63 @@ extern crate rand;
 extern crate rustpi_io;
 #[macro_use]
 extern crate clap;
+#[macro_use]
+extern crate downcast_rs;
 
 mod device;
 mod i2c_connection;
 
 use clap::App;
-use device::{Device, humidity_sensor::HumiditySensor, valve::Valve};
+use device::{Device, Sensor, Switch, humidity_sensor::HumiditySensor, valve::Valve};
 use i2c_connection::{ArduinoPin, Bus};
 use rustpi_io::pi::get_raspberry_info;
-use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 use std::{thread, time};
 
-fn init_devices<'a>(bus: Arc<Bus>) -> HashMap<String, Box<Device>> {
-    let mut device_list: HashMap<String, Box<Device>> = HashMap::new();
-    device_list.insert(
-        "hA0".to_string(),
-        Box::new(HumiditySensor::new(ArduinoPin::A0, bus.clone())),
-    );
-    device_list.insert(
-        "hA1".to_string(),
-        Box::new(HumiditySensor::new(ArduinoPin::A1, bus.clone())),
-    );
-
-    device_list.insert("v14".to_string(), Box::new(Valve::new(14).unwrap()));
-
+fn init_devices<'a>(bus: Weak<Bus>) -> Vec<Box<Device>> {
+    let mut device_list: Vec<Box<Device>> = Vec::with_capacity(3);
+    let mut dev1 = HumiditySensor::new(ArduinoPin::A0, bus.clone());
+    let mut dev2 = HumiditySensor::new(ArduinoPin::A1, bus.clone());
+    let mut dev3 = Valve::new(14).unwrap();
+    dev1.set_id("humidityA0".to_string());
+    dev2.set_id("humidityA1".to_string());
+    dev3.set_id("Valve14".to_string());
+    device_list.push(Box::new(dev1));
+    device_list.push(Box::new(dev2));
+    device_list.push(Box::new(dev3));
     device_list
 }
 
-fn main() {
-    let bus = Arc::new(Bus::new(0x08).unwrap());
-    let device_list = init_devices(bus);
+fn devices_to_string(devices: &Vec<Box<Device>>) -> String {
+    "devices".to_string()
+}
 
+fn main() {
     let yaml = load_yaml!("cli/cli.yml");
     let matches = App::from_yaml(yaml).get_matches();
 
+    let bus = Arc::new(Bus::new(0x08).unwrap());
+    let mut device_list = init_devices(Arc::downgrade(&bus));
+
     // Gets a value for config if supplied by user, or defaults to "default.conf"
-    let config = matches.value_of("config").unwrap_or("default.conf");
-    println!("Value for config: {}", config);
-
-    // Calling .unwrap() is safe here because "INPUT" is required (if "INPUT" wasn't
-    // required we could have used an 'if let' to conditionally get the value)
-    println!("Using input file: {}", matches.value_of("INPUT").unwrap());
-
-    // Vary the output based on how many times the user used the "verbose" flag
-    // (i.e. 'myprog -v -v -v' or 'myprog -vvv' vs 'myprog -v'
-    match matches.occurrences_of("v") {
-        0 => println!("No verbose info"),
-        1 => println!("Some verbose info"),
-        2 => println!("Tons of verbose info"),
-        3 | _ => println!("Don't be crazy"),
+    if matches.is_present("printDevices") {
+        println!("{}", devices_to_string(&device_list));
     }
 
-    // You can handle information about subcommands by requesting their matches by name
-    // (as below), requesting just the name used, or both at the same time
-    if let Some(matches) = matches.subcommand_matches("humidity") {
+    if let Some(matches) = matches.subcommand_matches("sensor") {
         let id = matches.value_of("id").unwrap();
+        if let Some(index) = device_list
+            .iter_mut()
+            .position(|device| device.get_id() == id)
+        {
+            if let Some(device) = device_list.get_mut(index) {
+                if let Some(sensor) = device.downcast_mut::<HumiditySensor>() {
+                    println!("{:?}", sensor.read());
+                    return;
+                }
+            }
+        }
+        eprintln!("Device not found or it is not a sensor");
     }
-
-    println!("{:?}", get_raspberry_info().unwrap());
-    loop {
-        //println!("{:?}", humidity_sensor.read().unwrap());
-        thread::sleep(time::Duration::from_millis(10000));
-    }
+    //println!("{:?}", get_raspberry_info().unwrap());
 }

@@ -1,17 +1,18 @@
 use device::{Device, DeviceName, Sensor};
 use i2c_connection::{ArduinoPin, Bus};
+use std::any::Any;
 use std::io::{Error, ErrorKind, Result};
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 pub struct HumiditySensor {
     name: DeviceName,
     pin: ArduinoPin,
-    bus: Arc<Bus>,
+    bus: Weak<Bus>,
     reading_count: u16,
 }
 
 impl HumiditySensor {
-    pub fn new(pin: ArduinoPin, bus: Arc<Bus>) -> Self {
+    pub fn new(pin: ArduinoPin, bus: Weak<Bus>) -> Self {
         HumiditySensor {
             name: DeviceName::new(),
             pin: pin,
@@ -38,7 +39,7 @@ impl Device for HumiditySensor {
 impl Sensor for HumiditySensor {
     fn read(&mut self) -> Result<u16> {
         let mut readings = Vec::with_capacity(self.reading_count as usize);
-        if let Some(bus) = Arc::get_mut(&mut self.bus) {
+        if let Ok(mut bus) = Arc::try_unwrap(self.bus.upgrade().unwrap()) {
             for _ in 0..self.reading_count {
                 readings.push(bus.read_word(self.pin)?);
             }
