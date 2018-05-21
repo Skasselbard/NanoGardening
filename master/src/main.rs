@@ -1,3 +1,4 @@
+extern crate rand;
 extern crate rustpi_io;
 #[macro_use]
 extern crate clap;
@@ -6,12 +7,12 @@ mod device;
 mod i2c_connection;
 
 use clap::App;
-use rustpi_io::pi::get_raspberry_info;
-use i2c_connection::{ArduinoPin, Bus};
 use device::{Device, humidity_sensor::HumiditySensor, valve::Valve};
-use std::{thread, time};
+use i2c_connection::{ArduinoPin, Bus};
+use rustpi_io::pi::get_raspberry_info;
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::{thread, time};
 
 fn init_devices<'a>(bus: Arc<Bus>) -> HashMap<String, Box<Device>> {
     let mut device_list: HashMap<String, Box<Device>> = HashMap::new();

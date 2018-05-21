@@ -4,5 +4,6 @@ version = "0.1.0"
 authors = ["Tom <tom.meyer89@gmail.com>"]
 
 [dependencies]
+rand = "0.4"
 rustpi_io = { git = "https://github.com/Skasselbard/rustpiIO", branch ="i2cWithI2cdev" }
 clap = {version = "2.31", features = ["yaml"]}
