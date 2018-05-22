@@ -1,7 +1,6 @@
 pub mod humidity_sensor;
 pub mod valve;
 
-use downcast_rs::Downcast;
 use std;
 
 pub struct DeviceName {
@@ -29,12 +28,11 @@ impl DeviceName {
     }
 }
 
-pub trait Device: Downcast {
+pub trait Device {
     fn name(&mut self) -> &mut DeviceName;
     fn set_id(&mut self, id: String);
     fn get_id(&self) -> &str;
 }
-impl_downcast!(Device);
 
 pub trait Sensor: Device {
     fn read(&mut self) -> std::io::Result<u16>;

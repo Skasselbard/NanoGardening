@@ -1,6 +1,5 @@
 use device::{Device, DeviceName, Switch};
 use rustpi_io::gpio::{GPIOData::{High, Low}, GPIOMode::Write, GPIO};
-use std::any::Any;
 use std::io::Result;
 
 pub struct Valve {
