@@ -36,7 +36,8 @@ subcommands:
         - toggleTimed:
             long: toggleTimed
             short: tt
-            help: toggles the state of the valve with ID for the given time
+            multiple: true
+            help: toggles the state of the valve with ID for the given time (in seconds)
             value_names: ID, TIME
             takes_value: true
 

@@ -11,7 +11,11 @@ impl Valve {
     pub fn new(pin: u8) -> Result<Self> {
         Ok(Valve {
             name: DeviceName::new(),
-            gpio: GPIO::new(pin, Write)?,
+            gpio: {
+                let gpio = GPIO::new(pin, Write)?;
+                gpio.set(High)?;
+                gpio
+            },
         })
     }
 }
@@ -32,7 +36,7 @@ impl Device for Valve {
 
 impl Switch for Valve {
     fn is_open(&mut self) -> Result<(bool)> {
-        if self.gpio.value()? == High {
+        if self.gpio.value()? == Low {
             Ok(true)
         } else {
             Ok(false)
@@ -40,10 +44,10 @@ impl Switch for Valve {
     }
 
     fn open(&mut self) -> Result<()> {
-        Ok(self.gpio.set(High)?)
+        Ok(self.gpio.set(Low)?)
     }
 
     fn close(&mut self) -> Result<()> {
-        Ok(self.gpio.set(Low)?)
+        Ok(self.gpio.set(High)?)
     }
 }
